@@ -83,6 +83,19 @@ async function postParty($form) {
   }
 }
 
+async function deleteParty(id) {
+  try {
+    const response = await fetch(`${API}/events/${id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      throw new Error("error in deleting");
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
 // === Components ===
 
 /** Party name that shows more details about the party when clicked */
@@ -128,9 +141,10 @@ function SelectedParty() {
     <address>${selectedParty.location}</address>
     <p>${selectedParty.description}</p>
     <GuestList></GuestList>
+    <DeleteButton></DeleteButton>
   `;
   $party.querySelector("GuestList").replaceWith(GuestList());
-
+  $party.querySelector("DeleteButton").replaceWith(DeleteButton());
   return $party;
 }
 
@@ -142,7 +156,6 @@ function GuestList() {
       (rsvp) => rsvp.guestId === guest.id && rsvp.eventId === selectedParty.id
     )
   );
-
   // Simple components can also be created anonymously:
   const $guests = guestsAtParty.map((guest) => {
     const $guest = document.createElement("li");
@@ -152,6 +165,21 @@ function GuestList() {
   $ul.replaceChildren(...$guests);
 
   return $ul;
+}
+
+function DeleteButton() {
+  const $delete = document.createElement("form");
+  $delete.innerHTML = `
+        <input type="submit" id="delete-button" value="delete">
+        `;
+
+  $delete.type = "submit";
+  $delete.id = "delete";
+  $delete.value = "waga baba bobo";
+  $delete.addEventListener("submit", async (event) => {
+    await deleteParty(selectedParty.id);
+  });
+  return $delete;
 }
 
 function PartyRegistrationForm() {
