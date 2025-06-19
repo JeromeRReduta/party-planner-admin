@@ -1,7 +1,7 @@
 // === Constants ===
 const BASE = "https://fsa-crud-2aa9294fe819.herokuapp.com/api";
-const COHORT = ""; // Make sure to change this!
-const API = BASE + COHORT;
+const COHORT = "2504-ftb-et-web-pt"; // Make sure to change this!
+const API = `${BASE}/${COHORT}`;
 
 // === State ===
 let parties = [];
@@ -52,6 +52,32 @@ async function getGuests() {
     const result = await response.json();
     guests = result.data;
     render();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function postParty($form) {
+  console.log("starting post");
+  const formData = new FormData($form);
+  const postBody = {
+    name: formData.get("name"),
+    description: formData.get("description"),
+    date: new Date(formData.get("date")).toISOString(),
+    location: formData.get("location"),
+  };
+  console.log(postBody);
+  try {
+    const response = await fetch(API + "/events", {
+      method: "POST",
+      body: JSON.stringify(postBody),
+      headers: {
+        "Content-type": "application/json",
+      },
+    });
+    if (!response.ok) {
+      throw new Error("error in posting");
+    }
   } catch (e) {
     console.error(e);
   }
@@ -128,6 +154,27 @@ function GuestList() {
   return $ul;
 }
 
+function PartyRegistrationForm() {
+  const $form = document.createElement("form"); // ty https://stackoverflow.com/questions/54970352/input-elements-should-have-autocomplete-attributes for teaching me how to remove "autocomplete" warning
+  $form.innerHTML = `
+        <input type="text" id="name" name="name" autocomplete="off">
+        <input type="date" id="date" name="date" autocomplete="off">
+        <input type="text" id="location" name="location" autocomplete="off">
+        <input type="description" id="description" name="description" autocomplete="off">
+        <input type="submit" value="Add party">
+    `;
+
+  // from https://stackoverflow.com/questions/75907299/html-form-not-triggering-submit-event-listener-when-form-is-submitted - apparently preventDefault() also prevents forms from working...
+  $form.addEventListener("click", (event) => {
+    console.log("teapot time clicked");
+  });
+  $form.addEventListener("submit", async (event) => {
+    await postParty($form);
+    console.log("done");
+  });
+  return $form;
+}
+
 // === Render ===
 function render() {
   const $app = document.querySelector("#app");
@@ -141,12 +188,14 @@ function render() {
       <section id="selected">
         <h2>Party Details</h2>
         <SelectedParty></SelectedParty>
+        <RegistrationForm></RegistrationForm>
       </section>
     </main>
   `;
 
   $app.querySelector("PartyList").replaceWith(PartyList());
   $app.querySelector("SelectedParty").replaceWith(SelectedParty());
+  $app.querySelector("RegistrationForm").replaceWith(PartyRegistrationForm());
 }
 
 async function init() {
